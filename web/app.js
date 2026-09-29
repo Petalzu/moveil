@@ -6,10 +6,24 @@ const canvases = [$('original'), $('result')];
 let job={items:[]}, selected=-1, serial=0, prefix='', uploading=false;
 const itemName=item=>item.display_name||`样例 ${item.offset}`;
 const drafts=new Map();
+const compactScreen=matchMedia('(max-width:760px)');
+function dataPanel(collapsed){
+  $('workspace').classList.toggle('data-collapsed',collapsed);
+  $('toggle-data').setAttribute('aria-expanded',String(!collapsed));
+  $('toggle-data').textContent=collapsed?'显示数据':'收起数据';
+}
+dataPanel(compactScreen.matches);
+compactScreen.addEventListener('change',event=>dataPanel(event.matches));
+$('toggle-data').onclick=()=>dataPanel(!$('workspace').classList.contains('data-collapsed'));
+$('view-mode').onchange=()=>{
+  $('sample').dataset.view=$('view-mode').value;
+  for(const canvas of canvases)canvas.parentElement.scrollTo(0,0);
+};
 for(let n=1;n<=10;n++)$('count').add(new Option(`${n} 张`,n));
 $('count').value='10';
 function draw() {
   if(!state)return;
+  $('inspector').hidden=false;
   canvases.forEach((canvas, i) => {
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -87,6 +101,8 @@ async function selectPage(index){
   if(selected>=0)drafts.set(job.items[selected].id,pending);
   selected=index;const item=job.items[index];const ticket=++serial;
   state=null;pending=drafts.get(item.id)||[];anchor=preview=null;
+  $('inspector').hidden=true;
+  for(const canvas of canvases)canvas.parentElement.scrollTo(0,0);
   $('sample').hidden=true;$('empty').hidden=false;$('empty').textContent=item.status==='failed'?'该样例处理失败':'正在加载…';$('metrics').textContent='';$('download').hidden=true;$('save').disabled=$('undo').disabled=true;
   $('sample-info').textContent=`第 ${index+1}/${job.items.length} 页 · 样例 ${item.offset} · 耗时 ${item.seconds} 秒`;pager();$('pages').children[index]?.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
   if(item.status==='failed')return;
@@ -98,7 +114,7 @@ async function selectPage(index){
 async function refresh(){
   if(busy||uploading)return;
   const r=await fetch('/api/batch');if(!r.ok)throw Error();const next=await r.json();const changed=job.id!==next.id;const oldLength=job.items.length;
-  if(changed){serial++;selected=-1;state=null;pending=[];drafts.clear();$('sample').hidden=true;$('empty').hidden=false;$('metrics').textContent='';$('sample-info').textContent='';$('save').disabled=$('undo').disabled=true;$('download').hidden=true;}
+  if(changed){serial++;selected=-1;state=null;pending=[];drafts.clear();$('sample').hidden=true;$('inspector').hidden=true;$('empty').hidden=false;$('metrics').textContent='';$('sample-info').textContent='';$('save').disabled=$('undo').disabled=true;$('download').hidden=true;}
   job=next;scores(job.metrics);$('start').disabled=job.status==='running'||busy;$('count').disabled=job.status==='running';$('progress').max=job.total||10;$('progress').value=job.completed;$('progress-text').textContent=`${job.phase} · ${job.completed}/${job.total} 张 · 失败 ${job.failed} 张 · ${job.elapsed} 秒`;
   uploadControls();
   if(changed||oldLength!==job.items.length){pager();if(selected<0&&job.items.length)await selectPage(0);}
