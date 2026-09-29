@@ -32,7 +32,7 @@ CONFIG = {
     'label_mapping': LABEL_MAP,
     'label_support': 'prompts from existing policy; class-level support remains unverified',
     'geometry': 'same Rapid projection OCR and strict character-to-box mapping as baseline',
-    'merge': 'highest-score nonoverlapping spans across label groups; no Qwen union',
+    'merge': 'highest-score label for identical spans; preserve partial-overlap coverage',
     'training_overlap': 'Nemotron-PII used during training; this cohort is development only',
 }
 if CONFIG['device'] not in {'cpu', 'cuda', 'cuda:0'}:

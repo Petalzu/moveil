@@ -33,7 +33,7 @@ function draw() {
   });
   $('save').disabled = busy || !pending.length;
   $('undo').disabled = busy || !pending.length;
-  $('version').textContent = `当前版本：${state.run} · ${pending.length} 个待保存框`;
+  $('version').textContent = `当前版本：${state.run} · ${pending.length} 个待保存框 · ${state.status}`;
   const m=state.automatic_metrics;
   $('metrics').textContent=m ? `当前图片：${m.fully_covered_entities}/${m.entity_count} 实体完整覆盖 · 非敏感墨迹误遮 ${(100*m.nonsensitive_ink_redacted_fraction).toFixed(2)}%` : state.evaluation_status==='manual'?'当前版本：手工补充遮挡':`检测到 ${state.detections.length} 个实体 · 自定义图片未提供标注`;
   $('match-section').hidden=!m;

@@ -1,5 +1,4 @@
 pillow==12.3.0
 rapidocr-onnxruntime==1.4.4
-requests==2.34.2
 numpy==2.4.6
 onnxruntime==1.30.0

@@ -10,15 +10,32 @@ import threading
 import time
 
 from agent import LABELS, projection_ocr, redact, validate
-from ner_config import CONFIG, CONFIG_HASH
+from nvidia_ner_config import CONFIG, CONFIG_HASH
 
 ROOT = Path(__file__).resolve().parent
 
 
+class WorkerError(RuntimeError):
+    """A safe worker error code; never includes document text."""
+    def __init__(self, code):
+        self.code = code if code in {'ValueError', 'RuntimeError', 'OutOfMemoryError',
+                                     'OSError', 'TypeError'} else 'InferenceError'
+        super().__init__('Worker failed: ' + self.code)
+
+
 class NerWorker:
+    script = 'nvidia_ner_worker.py'
+    config_hash = CONFIG_HASH
+    timeout = 900
+
+    def validate_metadata(self, metadata):
+        if metadata.get('status') != 'ready' or metadata.get('config_sha256') != self.config_hash:
+            raise ValueError('Worker startup failed')
+
     def __enter__(self):
         env = dict(os.environ, PYTHONIOENCODING='utf-8', PYTHONPATH='', HF_HUB_OFFLINE='1', TRANSFORMERS_OFFLINE='1')
-        self.process = subprocess.Popen([str(ROOT / '.venv-ner' / ('Scripts/python.exe' if os.name == 'nt' else 'bin/python')), str(ROOT / 'ner_worker.py')],
+        python = os.environ.get('MOVEIL_NER_PYTHON') or str(ROOT / '.venv-ner' / ('Scripts/python.exe' if os.name == 'nt' else 'bin/python'))
+        self.process = subprocess.Popen([python, str(ROOT / self.script)],
                                         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
                                         text=True, encoding='utf-8', env=env, cwd=ROOT)
         self.responses = queue.Queue()
@@ -30,8 +47,7 @@ class NerWorker:
         self.sequence = 0
         try:
             self.metadata = self.receive()
-            if self.metadata.get('status') != 'ready' or self.metadata.get('config_sha256') != CONFIG_HASH:
-                raise ValueError('Worker startup failed')
+            self.validate_metadata(self.metadata)
         except Exception:
             self.__exit__(None, None, None)
             raise
@@ -39,19 +55,35 @@ class NerWorker:
 
     def receive(self):
         try:
-            raw = self.responses.get(timeout=600)
+            raw = self.responses.get(timeout=self.timeout)
         except queue.Empty:
             raise TimeoutError('Worker timeout') from None
-        return json.loads(raw)
-
-    def predict(self, text):
-        self.sequence += 1
-        self.process.stdin.write(json.dumps({'id': self.sequence, 'text': text}) + '\n')
-        self.process.stdin.flush()
-        result = self.receive()
-        if set(result) != {'id', 'entities', 'windows', 'config_sha256'} or result['id'] != self.sequence or result['config_sha256'] != CONFIG_HASH:
+        if not raw:
+            raise RuntimeError('Worker exited before responding')
+        result = json.loads(raw)
+        if not isinstance(result, dict):
             raise ValueError('Invalid worker response')
         return result
+
+    def predict(self, text):
+        if self.process.poll() is not None:
+            raise RuntimeError('Worker is no longer running')
+        try:
+            self.sequence += 1
+            self.process.stdin.write(json.dumps({'id': self.sequence, 'text': text}) + '\n')
+            self.process.stdin.flush()
+            result = self.receive()
+            if result.get('id') != self.sequence or result.get('config_sha256') != self.config_hash:
+                raise ValueError('Invalid worker response')
+            if result.get('status') == 'failed':
+                raise WorkerError(result.get('error_type'))
+            if set(result) != {'id', 'entities', 'windows', 'config_sha256'}:
+                raise ValueError('Invalid worker response')
+            return result
+        except Exception:
+            # Never reuse an EOF/timeout/error stream for another document.
+            self.__exit__(None, None, None)
+            raise
 
     def __exit__(self, *args):
         if self.process.poll() is None:
@@ -93,18 +125,19 @@ def map_spans(entities, lines, min_score=None):
 
 
 def run(image, out, worker, ocr_provider=None, *, detector_config=CONFIG,
-        detector_config_hash=CONFIG_HASH, min_score=None, pipeline_name='ner-experimental-v1',
+        detector_config_hash=CONFIG_HASH, min_score=None, pipeline_name='nvidia-gliner-pii-experimental-v1',
         source_files=None):
     out.mkdir(parents=True, exist_ok=False)
     output, started = out / 'redacted.png', time.monotonic()
     if min_score is None:
         min_score = detector_config['threshold']
-    report = {'status': 'failed', 'pipeline': pipeline_name, 'config': detector_config,
+    report = {'status': 'failed', 'stage': 'input', 'pipeline': pipeline_name, 'config': detector_config,
               'config_sha256': detector_config_hash, 'worker': worker.metadata,
-              'native_tool_calls': False, 'structured_action_loop': False, 'openclaw_host_verified': False,
-              'sources': {name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest()
-                          for name in (source_files or ('agent.py', 'ner_pipeline.py', 'ner_worker.py', 'ner_config.py'))}}
+              'native_tool_calls': False, 'structured_action_loop': False, 'openclaw_host_verified': False}
     try:
+        report['sources'] = {name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest()
+                             for name in (source_files or ('agent.py', 'hybrid_geometry.py', 'ner_pipeline.py',
+                                 'ner_worker.py', 'ner_config.py', 'nvidia_ner_worker.py', 'nvidia_ner_config.py'))}
         report['input_sha256'] = hashlib.sha256(image.read_bytes()).hexdigest()
         report['stage'] = 'ocr'
         ocr_started = time.monotonic()
@@ -118,9 +151,9 @@ def run(image, out, worker, ocr_provider=None, *, detector_config=CONFIG,
         report.update(ocr_units=len(lines), ocr_characters=len(document), stage='ner')
         result = worker.predict(document)
         report['windows'] = result['windows']
-        report['ner_spans'] = result['entities']
         report['stage'] = 'geometry'
         spans = map_spans(result['entities'], lines, min_score=min_score)
+        report['ner_spans'] = result['entities']
         from hybrid_geometry import require_geometry
         report['geometry_unmapped_characters'] = sum(len(line.get('geometry_unmapped', [])) for line in lines)
         require_geometry(lines, spans)
@@ -129,21 +162,10 @@ def run(image, out, worker, ocr_provider=None, *, detector_config=CONFIG,
         report['status'] = 'completed_unassessed' if spans else 'no_detections_unverified'
     except Exception as exc:
         report['error_type'] = type(exc).__name__
+        if isinstance(exc, WorkerError):
+            report['error_code'] = exc.code
         output.unlink(missing_ok=True)
     report['elapsed_seconds'] = time.monotonic() - started
     (out / 'audit.json').write_text(json.dumps(report, indent=2, allow_nan=False), encoding='utf-8')
     print(json.dumps({'run': out.name, 'status': report['status'], 'stage': report['stage']}), flush=True)
     return report['status'] != 'failed'
-
-
-if __name__ == '__main__':
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--images', nargs='+', type=Path, required=True)
-    parser.add_argument('--outputs', nargs='+', type=Path, required=True)
-    args = parser.parse_args()
-    if len(args.images) != len(args.outputs):
-        parser.error('Images and outputs must match')
-    with NerWorker() as worker:
-        outcomes = [run(image, out, worker) for image, out in zip(args.images, args.outputs, strict=True)]
-    raise SystemExit(0 if all(outcomes) else 1)

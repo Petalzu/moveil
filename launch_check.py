@@ -20,7 +20,7 @@ def check():
     worker = Path(os.environ.get('MOVEIL_NER_PYTHON') or environment_python(ROOT, '.venv-ner'))
     if not worker.is_file():
         raise ValueError('Missing model environment; set MOVEIL_NER_PYTHON')
-    subprocess.run([sys.executable, '-c', 'import PIL, numpy, requests, rapidocr_onnxruntime, onnxruntime'], check=True)
+    subprocess.run([sys.executable, '-c', 'import PIL, numpy, rapidocr_onnxruntime, onnxruntime'], check=True)
     subprocess.run([str(worker), '-c', 'import torch, gliner, transformers'], check=True)
     if not (MODEL_DIR / 'gliner_config.json').is_file():
         raise ValueError('Missing model; run prepare_model.py with MOVEIL_MODEL_DIR set')

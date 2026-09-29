@@ -97,11 +97,10 @@ class LiveBatch:
         final_status, final_phase = 'completed', '运行完成'
         active = None
         try:
-            from nvidia_ner_pipeline import NvidiaNerWorker, run, CONFIG, CONFIG_HASH
+            from nvidia_ner_pipeline import NvidiaNerWorker, run, CONFIG, CONFIG_HASH, SOURCE_FILES
             cohort = self.root / 'cohorts/nvidia-gliner-pii-dev-015'
             if uploaded_source is None:
-                from benchmark import summarize
-                from nvidia_ner_benchmark import measure
+                from evaluate import measure, summarize
                 manifest = json.loads((cohort / 'manifest.json').read_text(encoding='utf-8'))[:count]
                 gate = json.loads((self.root / 'quality_gate.json').read_text(encoding='utf-8'))
             else:
@@ -147,8 +146,7 @@ class LiveBatch:
                     success = run(self.root / source_name, out, worker, detector_config=CONFIG,
                         detector_config_hash=CONFIG_HASH, min_score=CONFIG['threshold'],
                         pipeline_name='nvidia-gliner-pii-experimental-v1',
-                        source_files=('agent.py', 'ner_pipeline.py', 'ner_worker.py', 'ner_config.py',
-                                      'nvidia_ner_worker.py', 'nvidia_ner_config.py', 'nvidia_ner_pipeline.py'))
+                        source_files=SOURCE_FILES)
                     metric, summary = None, None
                     if uploaded_source is None:
                         metric = measure(base, out)
@@ -168,13 +166,18 @@ class LiveBatch:
                         self.job['items'].append(item)
                         self.job['completed'] += 1
                         self.job['failed'] += int(review is None)
-                        self.job['metrics'] = {k: summary[k] for k in ('n', 'entity_count', 'overall',
+                        self.job['metrics'] = {k: summary[k] for k in ('gate_passed', 'gate_version', 'n', 'entity_count', 'overall',
                             'correct_label', 'zero_missed_images', 'max_nonpii_ink_mask')} if summary else None
                     active = None
                     if summary is not None:
                         (destination / 'summary.json').write_text(json.dumps(summary, indent=2), encoding='utf-8')
                     if not success:
                         raise RuntimeError('Inference failed')
+                if uploaded_source is None:
+                    final_phase = ('运行完成 · 质量门禁通过（两项覆盖率均 >80%）' if summary['gate_passed']
+                                   else '运行完成 · 样本不足或质量门禁未通过')
+                else:
+                    final_phase = '运行完成 · 无标注，质量未评测'
         except Exception as error:
             with self.lock:
                 if active is not None:

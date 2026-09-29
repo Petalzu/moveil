@@ -58,17 +58,3 @@ def require_geometry(lines, spans):
         line = lines[span['line']]
         if any(span['start'] <= i < span['end'] for i in line.get('geometry_unmapped', [])):
             raise ValueError('Unaligned entity geometry')
-
-
-class HybridGeometry:
-    def __init__(self, paddle):
-        from rapidocr_onnxruntime import RapidOCR
-        from importlib.metadata import version
-        self.paddle, self.rapid = paddle, RapidOCR()
-        self.metadata = dict(paddle.metadata, backend='paddle-rapid-strict-hybrid-v1',
-            geometry='Rapid projection words; uniquely anchored exact character alignment; whitespace only',
-            rapid_version=version('rapidocr-onnxruntime'))
-
-    def __call__(self, image):
-        from agent import projection_ocr
-        return align_geometry(self.paddle(image), projection_ocr(image, self.rapid))

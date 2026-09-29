@@ -104,6 +104,8 @@ class Review:
                     if check.crop(b).getextrema() != ((0, 0),) * 3:
                         raise ValueError("Mask verification failed")
             audit = {"status": "pending_human_review", "approved": False, "parent_run": self.name,
+                     "parent_audit_sha256": hashlib.sha256((self.directory / 'audit.json').read_bytes()).hexdigest(),
+                     "worker": self.audit.get('worker', {}),
                      "input_sha256": self.audit["input_sha256"], "output_sha256": hashlib.sha256(output.read_bytes()).hexdigest(),
                      "detections": self.audit["detections"] + [{"label": "manual", "boxes": [b]} for b in boxes]}
             (directory / "audit.json").write_text(json.dumps(audit, indent=2), encoding="utf-8")

@@ -3,36 +3,21 @@ import contextlib
 import hashlib
 import importlib.metadata
 import json
+import math
 import os
 from pathlib import Path
 import sys
 
 from nvidia_ner_config import CONFIG, CONFIG_HASH, LABEL_GROUPS, WEIGHT_SHA256
 from ner_config import LABEL_MAP
+from ner_worker import windows as text_windows
 
 ROOT = Path(__file__).resolve().parent
 MODEL_DIR = Path(os.environ.get('MOVEIL_MODEL_DIR', str(ROOT / '.venv-ner/nvidia-gliner-pii')))
 
 
 def windows(model, text):
-    words = list(model.data_processor.words_splitter(text))
-    result, start = [], 0
-    while start < len(words):
-        end = min(start + CONFIG['window_words'], len(words))
-        while end > start:
-            part = text[words[start][1]:words[end - 1][2]]
-            count = len(model.data_processor.transformer_tokenizer(
-                part, add_special_tokens=True, truncation=False)['input_ids'])
-            if count <= CONFIG['max_subtokens']:
-                break
-            end -= 1
-        if end <= start:
-            raise ValueError('Oversized token')
-        result.append((words[start][1], part))
-        if end == len(words):
-            break
-        start = max(start + 1, end - CONFIG['overlap_words'])
-    return result
+    return text_windows(model, text, CONFIG)
 
 
 def predict(model, text):
@@ -51,13 +36,16 @@ def predict(model, text):
                 if (type(start) is not int or type(end) is not int or
                         not 0 <= start < end <= len(part)):
                     raise ValueError('Invalid span')
-                if part[start:end] != entity['text'] or label not in LABEL_MAP:
+                if (part[start:end] != entity['text'] or label not in LABEL_MAP or
+                    not math.isfinite(score) or not CONFIG['threshold'] <= score <= 1):
                     raise ValueError('Invalid evidence')
                 candidates.append({'start': offset + start, 'end': offset + end,
                                    'label': LABEL_MAP[label], 'score': score})
     selected = []
     for item in sorted(candidates, key=lambda e: (-e['score'], e['start'], e['end'], e['label'])):
-        if not any(item['start'] < e['end'] and item['end'] > e['start'] for e in selected):
+        # Resolve labels only for identical spans. Partial overlaps must not
+        # discard already detected characters at either end of an entity.
+        if not any((item['start'], item['end']) == (e['start'], e['end']) for e in selected):
             selected.append(item)
     return sorted(selected, key=lambda e: (e['start'], e['end'])), len(parts)
 
@@ -113,18 +101,22 @@ def main():
                   file=output, flush=True)
             return 1
         for raw in sys.stdin:
+            request_id = None
             try:
                 request = json.loads(raw)
-                if set(request) != {'id', 'text'} or type(request['id']) is not int:
+                if not isinstance(request, dict) or set(request) != {'id', 'text'} or type(request['id']) is not int:
                     raise ValueError('Invalid request')
+                request_id = request['id']
                 text = request['text']
                 if not isinstance(text, str) or not text.strip() or len(text) > 6000:
                     raise ValueError('Invalid document')
-                entities, count = predict(model, text)
+                with torch.inference_mode():
+                    entities, count = predict(model, text)
                 response = {'id': request['id'], 'entities': entities, 'windows': count,
                             'config_sha256': CONFIG_HASH}
             except Exception as exc:
-                response = {'status': 'failed', 'error_type': type(exc).__name__}
+                response = {'id': request_id, 'status': 'failed',
+                            'error_type': type(exc).__name__, 'config_sha256': CONFIG_HASH}
             print(json.dumps(response, allow_nan=False), file=output, flush=True)
     return 0
 
