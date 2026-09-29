@@ -1,4 +1,4 @@
-# 墨隐 MoVeil：DGX Spark 图像隐私识别与辅助脱敏
+# 墨隐 MoVeil：DGX Spark 本地化图像隐私识别与辅助脱敏
 
 ## 1. 项目目标
 
