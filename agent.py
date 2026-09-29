@@ -72,7 +72,7 @@ def projection_engine():
     return RapidOCR()
 
 
-def projection_ocr(image, engine=None):
+def projection_ocr(image, engine=None, *, recognize_batch=None):
     """Whitespace word boxes for clean horizontal dark-on-light documents only."""
     import numpy as np
     with Image.open(image) as source:
@@ -82,7 +82,7 @@ def projection_ocr(image, engine=None):
     if not len(ys) or ink.mean() > 0.25:
         raise ValueError("Unsupported layout")
     rows = np.split(ys, np.where(np.diff(ys) > 1)[0] + 1)
-    engine, lines = engine if engine is not None else projection_engine(), []
+    crops, polygons = [], []
     for row in rows:
         y0, y1 = int(row[0]), int(row[-1]) + 1
         if y1-y0 < 10:
@@ -92,10 +92,30 @@ def projection_ocr(image, engine=None):
         for word in words:
             x0, x1 = int(word[0]), int(word[-1]) + 1
             crop = pixels[max(0,y0-8):y1+8, max(0,x0-8):x1+8]
+            crops.append(crop)
+            polygons.append([[x0,y0],[x1,y0],[x1,y1],[x0,y1]])
+            if len(crops) > 512:
+                raise ValueError("Document exceeds validated scope")
+    if recognize_batch is None:
+        engine = engine if engine is not None else projection_engine()
+        results = []
+        for crop in crops:
             result, _ = engine(crop, use_det=False, use_cls=False)
-            if not result or not result[0][0].strip():
+            if not result:
                 raise ValueError("OCR returned no text")
-            text, score = result[0]
-            lines.append({"text": text.strip(), "confidence": float(score), "units": [
-                {"start": 0, "end": len(text.strip()), "polygon": [[x0,y0],[x1,y0],[x1,y1],[x0,y1]]}]})
+            results.append(result[0])
+    else:
+        results = list(recognize_batch(crops))
+    if len(results) != len(polygons):
+        raise ValueError("OCR result count mismatch")
+    lines = []
+    for (text, score), polygon in zip(results, polygons, strict=True):
+        if not isinstance(text, str) or not text.strip() or len(text) > 6000:
+            raise ValueError("OCR returned invalid text")
+        score = float(score)
+        if not math.isfinite(score) or not 0 <= score <= 1:
+            raise ValueError("OCR returned invalid confidence")
+        text = text.strip()
+        lines.append({"text": text, "confidence": score, "units": [
+            {"start": 0, "end": len(text), "polygon": polygon}]})
     return lines

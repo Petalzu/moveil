@@ -76,6 +76,10 @@ def main():
                                            load_tokenizer=True)
             model.to(CONFIG['device'])
             model.eval()
+            precision = CONFIG['precision']
+            if precision == 'bf16' and not torch.cuda.is_bf16_supported():
+                raise RuntimeError('BF16 is not supported')
+            autocast_dtype = {'fp16': torch.float16, 'bf16': torch.bfloat16}.get(precision)
             actual_device = str(next(model.parameters()).device)
             expected_device = 'cuda:0' if CONFIG['device'] == 'cuda' else CONFIG['device']
             if actual_device != expected_device:
@@ -88,6 +92,8 @@ def main():
             ready = {'status': 'ready', 'config_sha256': CONFIG_HASH,
                      'requested_device': CONFIG['device'],
                      'actual_device': actual_device,
+                     'parameter_dtype': str(next(model.parameters()).dtype),
+                     'precision': precision,
                      'cuda_version': torch.version.cuda,
                      'gpu_name': torch.cuda.get_device_name(0) if CONFIG['device'].startswith('cuda') else None,
                      'model_files': hashes,
@@ -110,7 +116,9 @@ def main():
                 text = request['text']
                 if not isinstance(text, str) or not text.strip() or len(text) > 6000:
                     raise ValueError('Invalid document')
-                with torch.inference_mode():
+                autocast = (contextlib.nullcontext() if autocast_dtype is None else
+                            torch.autocast('cuda', dtype=autocast_dtype))
+                with torch.inference_mode(), autocast:
                     entities, count = predict(model, text)
                 response = {'id': request['id'], 'entities': entities, 'windows': count,
                             'config_sha256': CONFIG_HASH}

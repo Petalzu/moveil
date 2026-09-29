@@ -3,10 +3,11 @@ from pathlib import Path
 
 from nvidia_ner_config import CONFIG, CONFIG_HASH
 from ner_pipeline import NerWorker, WorkerError, run
+from ocr_backend import make_ocr_provider
 
 ROOT = Path(__file__).resolve().parent
 SOURCE_FILES = ('agent.py', 'hybrid_geometry.py', 'ner_pipeline.py', 'ner_worker.py', 'ner_config.py',
-                'nvidia_ner_worker.py', 'nvidia_ner_config.py', 'nvidia_ner_pipeline.py')
+                'nvidia_ner_worker.py', 'nvidia_ner_config.py', 'nvidia_ner_pipeline.py', 'ocr_backend.py')
 
 
 def validate_ready(metadata):
@@ -32,8 +33,9 @@ def main():
     args = parser.parse_args()
     if len(args.images) != len(args.outputs):
         parser.error('Images and outputs must match')
+    ocr = make_ocr_provider()
     with NvidiaNerWorker() as worker:
-        outcomes = [run(image, out, worker, detector_config=CONFIG,
+        outcomes = [run(image, out, worker, ocr_provider=ocr, detector_config=CONFIG,
                         detector_config_hash=CONFIG_HASH, min_score=CONFIG['threshold'],
                         pipeline_name='nvidia-gliner-pii-experimental-v1',
                         source_files=SOURCE_FILES)

@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "source": "Spark candidate deployment runs/gpu-validation.json and browser/API verification",
+  "dataset": {
+    "name": "nvidia/Nemotron-PII rendered synthetic development images",
+    "offsets": [50001, 50002, 50003, 50004, 50005, 50006, 50007, 50008, 50009, 50010],
+    "entities": 54,
+    "limitation": "Same source as model training data; not an independent test set"
+  },
+  "environment": {
+    "gpu": "NVIDIA GB10",
+    "capability": [12, 1],
+    "architecture": "aarch64",
+    "driver": "580.82.09",
+    "python": "3.12.13",
+    "torch": "2.11.0+cu130",
+    "cuda": "13.0",
+    "gliner": "0.2.29",
+    "transformers": "4.51.3",
+    "rapidocr": "3.9.2"
+  },
+  "profile": {
+    "config_sha256": "8e05ce27b809df7ceb037d3f23c6be0fc61c29e10d9ea913e7e58c727baab32d",
+    "ocr_backend": "ppocrv6-torch",
+    "ocr_model": "PP-OCRv6 Medium",
+    "ocr_dtype": "float32",
+    "ocr_batch_size": 16,
+    "ocr_asset_revision": "v3.9.2",
+    "ocr_weight_sha256": "c2a2a7aa73892e1efc90cccd2aecc7e670ce01610490bbef7626abb3a3df52aa",
+    "ocr_dictionary_sha256": "b5f2bfe2bdd9448429e3e82b51c789775d9b42f2403d082b00662eb77e401c5d",
+    "ner_model": "nvidia/gliner-PII",
+    "ner_precision": "fp16",
+    "ner_parameter_dtype": "torch.float32",
+    "ner_precision_method": "CUDA autocast",
+    "device": "cuda:0"
+  },
+  "timing_scope": {
+    "included": ["job model initialization", "OCR", "NER", "pixel output", "sample evaluation", "review publication"],
+    "excluded": ["service bootstrap", "network upload transfer", "upload normalization before job start", "browser polling wait"],
+    "unit": "seconds"
+  },
+  "ten_image_runs": [
+    {"id": "live-93aa27547081e34f", "models_reused": false, "worker_pid": 4116, "elapsed_seconds": 12.34604475100059, "model_load_seconds": 8.57},
+    {"id": "live-5e81a7a9cb11fd10", "models_reused": true, "worker_pid": 4116, "elapsed_seconds": 2.829785480047576, "model_load_seconds": 0.0},
+    {"id": "live-09f3e248f04322c5", "models_reused": true, "worker_pid": 4116, "elapsed_seconds": 2.6247340930858627, "model_load_seconds": 0.0},
+    {"id": "live-c51686fa82b5ec43", "models_reused": true, "worker_pid": 4116, "elapsed_seconds": 2.598336666938849, "model_load_seconds": 0.0}
+  ],
+  "quality_identical_across_four_runs": {
+    "images": 10,
+    "failed": 0,
+    "fully_covered_entities": 51,
+    "correct_label_fully_covered_entities": 49,
+    "zero_missed_images": 7,
+    "max_nonpii_ink_mask": 0.11257544714546763,
+    "gate_version": 2,
+    "gate_passed": true
+  },
+  "historical_baseline": {
+    "profile": "rapid-cpu + GLiNER fp32",
+    "run": "live-77aa07f5b6f3170f",
+    "fully_covered_entities": 52,
+    "correct_label_fully_covered_entities": 44,
+    "zero_missed_images": 8,
+    "elapsed_seconds_rounded": 14.1,
+    "comparison_note": "Historical cold job; not a paired hot-throughput comparison"
+  },
+  "warm_upload_runs": [
+    {"id": "live-eee52f83b42e7b34", "worker_pid": 4116, "elapsed_seconds": 0.2140495169442147},
+    {"id": "live-14af81111510ef59", "worker_pid": 4116, "elapsed_seconds": 0.20723534503486007},
+    {"id": "live-60194a1ca147c14e", "worker_pid": 4116, "elapsed_seconds": 0.206947615952231}
+  ],
+  "lifecycle": {
+    "same_pid_across_jobs": true,
+    "failed_job_releases_models": true,
+    "next_job_recovers": true,
+    "close_reaps_worker": true,
+    "closed_rejects_job": true,
+    "rejected_blank_run": "live-dc7ca290b9aab007",
+    "recovery_run": "live-c277e60aad5b76a0",
+    "recovery_worker_pid": 4183
+  },
+  "browser_regression": {
+    "sample_run": "live-739f7a8c624cab8d",
+    "sample_elapsed_seconds": 12.091782137053087,
+    "upload_run": "live-348f0e441e3b0123",
+    "upload_elapsed_seconds": 0.21200586098711938,
+    "same_worker_pid": 4447,
+    "upload_detections": 12,
+    "checks": ["pagination", "draw on both images", "undo", "cross-page draft retention", "save", "download hash equality", "black manual pixels", "upload"],
+    "manual_run": "review-aff0ad50beaa0d98",
+    "manual_box": [16, 16, 64, 32],
+    "output_sha256": "87922a98b586d5f3d1dcf259d573784910ea1f8e7824cf671e60a05a8c2f4bb9",
+    "approved": false,
+    "ocr_and_ner_metadata_preserved": true,
+    "invalid_host_status": 403,
+    "invalid_origin_status": 403,
+    "missing_token_status": 403
+  }
+}

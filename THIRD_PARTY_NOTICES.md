@@ -20,6 +20,15 @@
 - 本仓库不分发权重；`prepare_model.py` 由用户从上游固定版本下载。模型使用的基础组件和依赖可能另有条件，不以本项目源码许可取代。
 - 模型训练涉及 Nemotron-PII，随仓开发集不构成独立测试集。
 
+## PaddleOCR 与 RapidAI 转换模型
+
+- 上游模型：PaddlePaddle/PaddleOCR，https://github.com/PaddlePaddle/PaddleOCR 。原始模型权利归 Baidu 及相应 PaddleOCR 权利人所有。
+- 推理软件及资产发布：RapidAI/RapidOCR，https://github.com/RapidAI/RapidOCR 。软件版权归 RapidOCR Authors；RapidOCR 上游声明其 PaddleOCR 派生权重及转换资产沿用 Apache-2.0 条款。
+- PyTorch 转换项目致谢：PaddleOCR2Pytorch，https://github.com/frotms/PaddleOCR2Pytorch ，采用 Apache-2.0；RapidOCR 在上游致谢中列为 Torch 转换模型来源。
+- 本项目固定 RapidOCR **3.9.2**，模型发布版本 **v3.9.2**，来源为 ModelScope 的 `RapidAI/RapidOCR`。使用 PP-OCRv5 Server `ch_PP-OCRv5_rec_server.pth`、PP-OCRv6 Medium `PP-OCRv6_rec_medium.pth` 及对应字符字典。
+- 权重与字典的文件名、SHA256 固定于 `ocr_backend.py`；`prepare_model.py --ocr` 下载并核验，推理加载前再次校验。本项目使用上游转换资产进行推理，保留模型权重与字典原内容。
+- 软件、模型及转换资产按各自适用的 Apache License 2.0 条款使用，许可全文见 https://www.apache.org/licenses/LICENSE-2.0 。分发模型资产时应同时保留上游许可、版权归属及适用 NOTICE，并注明实际修改。
+
 ## 软件依赖与历史研究代码
 
 Pillow、NumPy、Requests、RapidOCR、ONNX Runtime、GLiNER、PyTorch、Transformers、Hugging Face Hub 及其传递依赖归各自权利人所有，按各自发布许可使用；本项目通过 requirements 安装，不重打包其源码或模型。RapidOCR 的随包模型也应按上游条款使用。

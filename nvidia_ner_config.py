@@ -4,6 +4,7 @@ import json
 import os
 
 from ner_config import LABEL_MAP
+from ocr_backend import OCR_CONFIG
 
 MODEL = 'nvidia/gliner-PII'
 REVISION = 'bd23e8ef4425fd04e34c5204ab49ffaa706eae79'
@@ -26,15 +27,21 @@ CONFIG = {
     'max_subtokens': 352,
     'model_max_len': 384,
     'batch_size': 1,
+    'precision': os.environ.get('MOVEIL_NER_PRECISION', 'fp32'),
     'seed': 0,
     'threads': 4,
     'device': os.environ.get('MOVEIL_DEVICE', 'cpu'),
+    'ocr': OCR_CONFIG,
     'label_mapping': LABEL_MAP,
     'label_support': 'prompts from existing policy; class-level support remains unverified',
-    'geometry': 'same Rapid projection OCR and strict character-to-box mapping as baseline',
+    'geometry': 'original-resolution projection word boxes and strict character-to-box mapping',
     'merge': 'highest-score label for identical spans; preserve partial-overlap coverage',
     'training_overlap': 'Nemotron-PII used during training; this cohort is development only',
 }
 if CONFIG['device'] not in {'cpu', 'cuda', 'cuda:0'}:
     raise ValueError('MOVEIL_DEVICE must be cpu, cuda or cuda:0')
+if CONFIG['precision'] not in {'fp32', 'fp16', 'bf16'}:
+    raise ValueError('MOVEIL_NER_PRECISION must be fp32, fp16 or bf16')
+if CONFIG['precision'] != 'fp32' and not CONFIG['device'].startswith('cuda'):
+    raise ValueError('Mixed precision requires CUDA')
 CONFIG_HASH = hashlib.sha256(json.dumps(CONFIG, sort_keys=True).encode()).hexdigest()

@@ -149,16 +149,22 @@ def run(image, out, worker, ocr_provider=None, *, detector_config=CONFIG,
         if len(document) > 6000:
             raise ValueError('Document exceeds validated scope')
         report.update(ocr_units=len(lines), ocr_characters=len(document), stage='ner')
+        ner_started = time.monotonic()
         result = worker.predict(document)
+        report['ner_seconds'] = time.monotonic() - ner_started
         report['windows'] = result['windows']
         report['stage'] = 'geometry'
+        geometry_started = time.monotonic()
         spans = map_spans(result['entities'], lines, min_score=min_score)
         report['ner_spans'] = result['entities']
         from hybrid_geometry import require_geometry
         report['geometry_unmapped_characters'] = sum(len(line.get('geometry_unmapped', [])) for line in lines)
         require_geometry(lines, spans)
+        report['geometry_seconds'] = time.monotonic() - geometry_started
+        output_started = time.monotonic()
         report['detections'] = redact(image, output, spans, lines)
         report['output_sha256'] = hashlib.sha256(output.read_bytes()).hexdigest()
+        report['output_seconds'] = time.monotonic() - output_started
         report['status'] = 'completed_unassessed' if spans else 'no_detections_unverified'
     except Exception as exc:
         report['error_type'] = type(exc).__name__

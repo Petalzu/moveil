@@ -64,7 +64,8 @@ class Review:
         metrics = json.loads(metric_path.read_text(encoding="utf-8")) if metric_path.is_file() else None
         return {"run": self.name, "width": self.size[0], "height": self.size[1],
             "model": {key: self.audit.get('worker', {}).get(key) for key in
-                      ('actual_device', 'requested_device', 'gpu_name', 'versions')},
+                      ('actual_device', 'requested_device', 'gpu_name', 'versions', 'precision')},
+            "ocr": self.audit.get('ocr_backend', self.audit.get('config', {}).get('ocr')),
             "evaluation_status": "manual" if self.audit.get("parent_run") else "evaluated" if metrics is not None else "unannotated",
             "cohort_metrics": None,
             "entity_matches": [] if metrics is None else metrics.get('entities', []),
@@ -106,6 +107,7 @@ class Review:
             audit = {"status": "pending_human_review", "approved": False, "parent_run": self.name,
                      "parent_audit_sha256": hashlib.sha256((self.directory / 'audit.json').read_bytes()).hexdigest(),
                      "worker": self.audit.get('worker', {}),
+                     "ocr_backend": self.audit.get('ocr_backend', self.audit.get('config', {}).get('ocr')),
                      "input_sha256": self.audit["input_sha256"], "output_sha256": hashlib.sha256(output.read_bytes()).hexdigest(),
                      "detections": self.audit["detections"] + [{"label": "manual", "boxes": [b]} for b in boxes]}
             (directory / "audit.json").write_text(json.dumps(audit, indent=2), encoding="utf-8")
@@ -214,7 +216,14 @@ def make_server(review, port=18196):
             except Exception:
                 self.respond(400, b'{"error":"Save rejected; refresh and retry"}')
 
-    return HTTPServer(("127.0.0.1", port), Handler)
+    class ReviewServer(HTTPServer):
+        def server_close(self):
+            try:
+                super().server_close()
+            finally:
+                batch.close()
+
+    return ReviewServer(("127.0.0.1", port), Handler)
 
 
 if __name__ == "__main__":
@@ -225,4 +234,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     server = make_server(Review(ROOT, args.run, args.input), args.port)
     print(f"Review: http://127.0.0.1:{server.server_port} (unapproved)", flush=True)
-    server.serve_forever()
+    try:
+        server.serve_forever()
+    finally:
+        server.server_close()

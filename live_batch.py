@@ -1,5 +1,6 @@
 """Local, bounded live inference jobs over the labeled development images."""
 import copy
+from contextlib import contextmanager
 import hashlib
 import io
 import json
@@ -41,6 +42,10 @@ class LiveBatch:
         self.root = root
         self.review_factory = review_factory
         self.lock = threading.RLock()
+        self.inference_lock = threading.Lock()
+        self.worker = None
+        self.ocr = None
+        self.closed = False
         self.reviews = {}
         self.job = {'id': None, 'mode': 'samples', 'status': 'idle', 'total': 0, 'completed': 0,
                     'failed': 0, 'items': [], 'metrics': None, 'phase': '选择数量后开始运行'}
@@ -55,6 +60,8 @@ class LiveBatch:
         if type(count) is not int or not 1 <= count <= 10:
             raise ValueError('Choose 1 to 10 images')
         with self.lock:
+            if self.closed:
+                raise RuntimeError('Service is closing')
             if self.job['status'] == 'running':
                 raise RuntimeError('A batch is already running')
             batch_id = 'live-' + secrets.token_hex(8)
@@ -67,6 +74,8 @@ class LiveBatch:
 
     def start_upload(self, payload, content_type='image/png'):
         with self.lock:
+            if self.closed:
+                raise RuntimeError('Service is closing')
             if self.job['status'] == 'running':
                 raise RuntimeError('A batch is already running')
             normalized = normalize_upload(payload, content_type)
@@ -93,11 +102,45 @@ class LiveBatch:
         with self.lock:
             return self.reviews[key]
 
+    def _release_models(self):
+        worker, self.worker = self.worker, None
+        self.ocr = None
+        if worker is not None:
+            worker.__exit__(None, None, None)
+
+    @contextmanager
+    def _models(self):
+        from nvidia_ner_pipeline import NvidiaNerWorker, make_ocr_provider
+        with self.inference_lock:
+            if self.closed:
+                raise RuntimeError('Service is closing')
+            reused = self.worker is not None and self.worker.process.poll() is None
+            started = time.monotonic()
+            try:
+                if not reused:
+                    self._release_models()
+                    self.ocr = make_ocr_provider()
+                    self.worker = NvidiaNerWorker().__enter__()
+                with self.lock:
+                    self.job['models_reused'] = reused
+                    self.job['model_load_seconds'] = round(time.monotonic() - started, 3)
+                yield self.worker, self.ocr
+            except Exception:
+                self._release_models()
+                raise
+
+    def close(self):
+        with self.lock:
+            self.closed = True
+        # Wait for the sole owner; never close JSONL pipes mid-request.
+        with self.inference_lock:
+            self._release_models()
+
     def _run(self, batch_id, count, uploaded_source=None):
         final_status, final_phase = 'completed', '运行完成'
         active = None
         try:
-            from nvidia_ner_pipeline import NvidiaNerWorker, run, CONFIG, CONFIG_HASH, SOURCE_FILES
+            from nvidia_ner_pipeline import run, CONFIG, CONFIG_HASH, SOURCE_FILES
             cohort = self.root / 'cohorts/nvidia-gliner-pii-dev-015'
             if uploaded_source is None:
                 from evaluate import measure, summarize
@@ -126,11 +169,12 @@ class LiveBatch:
                 'source': uploaded_source,
                 'selected_offsets': [e['offset'] for e in manifest]}), encoding='utf-8')
             records = []
-            with NvidiaNerWorker() as worker:
+            with self._models() as (worker, ocr):
                 with self.lock:
                     metadata = worker.metadata if isinstance(worker.metadata, dict) else {}
                     self.job['model'] = {key: metadata.get(key) for key in
-                        ('actual_device', 'requested_device', 'gpu_name', 'versions')}
+                        ('actual_device', 'requested_device', 'gpu_name', 'versions', 'precision')}
+                    self.job['ocr'] = ocr.metadata if ocr is not None else CONFIG['ocr']
                 for index, entry in enumerate(manifest):
                     offset = entry['offset']
                     active = offset
@@ -144,6 +188,7 @@ class LiveBatch:
                     with self.lock:
                         self.job['phase'] = '正在处理上传图片' if uploaded_source else f'正在处理第 {index + 1}/{count} 张 · 样例 {offset}'
                     success = run(self.root / source_name, out, worker, detector_config=CONFIG,
+                        ocr_provider=ocr,
                         detector_config_hash=CONFIG_HASH, min_score=CONFIG['threshold'],
                         pipeline_name='nvidia-gliner-pii-experimental-v1',
                         source_files=SOURCE_FILES)
@@ -178,6 +223,13 @@ class LiveBatch:
                                    else '运行完成 · 样本不足或质量门禁未通过')
                 else:
                     final_phase = '运行完成 · 无标注，质量未评测'
+                (destination / 'performance.json').write_text(json.dumps({
+                    'models_reused': self.job['models_reused'],
+                    'model_load_seconds': self.job['model_load_seconds'],
+                    'worker_pid': worker.process.pid,
+                    'elapsed_seconds': time.monotonic() - self.job['started'],
+                    'ocr': ocr.metadata if ocr is not None else CONFIG['ocr'],
+                }, indent=2), encoding='utf-8')
         except Exception as error:
             with self.lock:
                 if active is not None:
