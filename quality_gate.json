@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "frozen_before_new_inference": true,
+  "scope": "Rendered English-language intl Nemotron-PII records; fixed train offsets 50001..50010, never used for tuning before first evaluation. Small smoke cohort, not production certification.",
+  "revision": "b70ffaf5ff39e079776134c5bf4381f00a9fd1ed",
+  "holdout_offsets": [50001,50002,50003,50004,50005,50006,50007,50008,50009,50010],
+  "minimum_records": 10,
+  "overall_entity_full_coverage_min": 0.95,
+  "per_label_entity_full_coverage_min": 0.95,
+  "correct_label_full_coverage_min": 0.95,
+  "zero_missed_image_fraction_min": 0.90,
+  "per_image_nonpii_ink_false_mask_max": 0.10,
+  "dev_required_full_entities": 6,
+  "failures_count_as_missed": true,
+  "human_review_counts": false
+}

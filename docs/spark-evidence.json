@@ -1,0 +1,294 @@
+{
+  "summary": {
+    "gate_passed": false,
+    "n": 10,
+    "entity_count": 54,
+    "overall": 0.9629629629629629,
+    "correct_label": 0.8148148148148148,
+    "zero_missed_images": 0.8,
+    "max_nonpii_ink_mask": 0.11257544714546763,
+    "per_label": {
+      "first_name": {
+        "n": 9,
+        "full": 9,
+        "correct": 3
+      },
+      "last_name": {
+        "n": 6,
+        "full": 6,
+        "correct": 6
+      },
+      "occupation": {
+        "n": 2,
+        "full": 2,
+        "correct": 1
+      },
+      "blood_type": {
+        "n": 1,
+        "full": 1,
+        "correct": 1
+      },
+      "education_level": {
+        "n": 2,
+        "full": 2,
+        "correct": 2
+      },
+      "credit_debit_card": {
+        "n": 1,
+        "full": 1,
+        "correct": 1
+      },
+      "company_name": {
+        "n": 3,
+        "full": 3,
+        "correct": 3
+      },
+      "vehicle_identifier": {
+        "n": 1,
+        "full": 1,
+        "correct": 1
+      },
+      "date": {
+        "n": 2,
+        "full": 2,
+        "correct": 2
+      },
+      "country": {
+        "n": 1,
+        "full": 1,
+        "correct": 1
+      },
+      "phone_number": {
+        "n": 2,
+        "full": 2,
+        "correct": 2
+      },
+      "date_of_birth": {
+        "n": 3,
+        "full": 3,
+        "correct": 3
+      },
+      "email": {
+        "n": 4,
+        "full": 3,
+        "correct": 2
+      },
+      "biometric_identifier": {
+        "n": 1,
+        "full": 1,
+        "correct": 1
+      },
+      "url": {
+        "n": 1,
+        "full": 0,
+        "correct": 0
+      },
+      "religious_belief": {
+        "n": 2,
+        "full": 2,
+        "correct": 2
+      },
+      "ssn": {
+        "n": 2,
+        "full": 2,
+        "correct": 2
+      },
+      "bank_routing_number": {
+        "n": 1,
+        "full": 1,
+        "correct": 1
+      },
+      "tax_id": {
+        "n": 1,
+        "full": 1,
+        "correct": 1
+      },
+      "street_address": {
+        "n": 2,
+        "full": 2,
+        "correct": 2
+      },
+      "medical_record_number": {
+        "n": 1,
+        "full": 1,
+        "correct": 1
+      },
+      "date_time": {
+        "n": 1,
+        "full": 1,
+        "correct": 1
+      },
+      "age": {
+        "n": 1,
+        "full": 1,
+        "correct": 1
+      },
+      "time": {
+        "n": 1,
+        "full": 1,
+        "correct": 1
+      },
+      "pin": {
+        "n": 1,
+        "full": 1,
+        "correct": 1
+      },
+      "health_plan_beneficiary_number": {
+        "n": 1,
+        "full": 1,
+        "correct": 1
+      },
+      "race_ethnicity": {
+        "n": 1,
+        "full": 1,
+        "correct": 1
+      }
+    },
+    "scope": "Fixed synthetic smoke cohort only, not production assurance",
+    "config_sha256": "7a397d037e40d755459bc8ae56896bff6dc9c7c369298aca3ff1501132fd73da",
+    "gate_sha256": "5a05ad814391b5d195fc3e9aac5245488724d2be93046ff0af55d75360d3d438",
+    "single_gate_passed": false,
+    "eligible_for_new_holdout": false,
+    "subprocess_returncode": 0,
+    "new_holdout": false,
+    "failed_records": 0
+  },
+  "root_metrics": {
+    "uid": "058211ab4d324e3a9e5b83c557a341d6",
+    "revision": "b70ffaf5ff39e079776134c5bf4381f00a9fd1ed",
+    "entity_count": 6,
+    "fully_covered_entities": 6,
+    "missed_entity_ids": [],
+    "missed_labels": [],
+    "sensitive_ink_coverage": 1.0,
+    "false_positive_detections_no_sensitive_overlap": 0,
+    "nonsensitive_ink_redacted_fraction": 0.01525271657860632,
+    "black_rectangle_pixels_verified": 39492,
+    "metadata_empty": true,
+    "result": "single_image_all_entities_covered",
+    "limitation": "One rendered synthetic intl record, not a dataset benchmark. Geometry matching is not semantic precision. No guarantee for unseen labels or scans."
+  },
+  "worker": {
+    "status": "ready",
+    "config_sha256": "7a397d037e40d755459bc8ae56896bff6dc9c7c369298aca3ff1501132fd73da",
+    "requested_device": "cuda",
+    "actual_device": "cuda:0",
+    "cuda_version": "13.0",
+    "gpu_name": "NVIDIA GB10",
+    "model_files": {
+      ".gitattributes": "11ad7efa24975ee4b0c3c3a38ed18737f0658a5f75a0a96787b576a78a023361",
+      "BIAS.md": "e8d85b278dd15484436805eaf8308d09a6697ef60c2ecd8922ad0716519a0b74",
+      "EXPLAINABILITY.md": "dc8a645e8cec32bc38dafdc8b935950e365de86a275e3f5f11c13ad9d1dc632a",
+      "PRIVACY.md": "acab0509c938b1a8b0902892482e7c71efabca544932c2210c2425572aa6e99a",
+      "README.md": "c9282ca08d92fe4f754f0d390d75555f6e595d71d504be986b020ee934eb171f",
+      "SAFETY&SECURITY.md": "f3db584ae08e31469811f5e88695dd39fa3f696732f0be10d6d61e6800e1966c",
+      "added_tokens.json": "0a4df7f7953a90443fa51b6ca723242f6cb29e7fc34b1f27fc320c8e60de45b7",
+      "gliner_config.json": "798b48ffb6207757145b7c0df3dc81a147c9bef85a886e87da3ab3a11b8ac844",
+      "pytorch_model.bin": "a4dfd0dcbd718acc86dca65fa99f1097d2796c8d7a681e1bc42f40f946c03802",
+      "special_tokens_map.json": "b2f1b2f15f29a6b6d9d6ea4eca1675d2c231a71477f151d48f79cc83a625ba21",
+      "spm.model": "c679fbf93643d19aab7ee10c0b99e460bdbc02fedf34b92b05af343b4af586fd",
+      "tokenizer.json": "953deb290bdcbd985bb91223801eeb4bea79021f0d2e24ebb764dcd2b0816cf9",
+      "tokenizer_config.json": "90ccec9ada3be53f8ef5da7187ab669ba0a8ae7d5c4d3b7cf10550a24fd7994d"
+    },
+    "versions": {
+      "gliner": "0.2.29",
+      "torch": "2.11.0+cu130",
+      "transformers": "4.51.3"
+    },
+    "model_class": "UniEncoderSpanGLiNER",
+    "model_max_types": 25
+  },
+  "records": [
+    {
+      "path": "runs/spark-gpu-single-001/audit.json",
+      "sha256": "5edd8967e100daca6fb754141300493f3c3ec98769baaf20cc0cc9e6ef66bdcf",
+      "status": "completed_unassessed",
+      "seconds": 1.1579693969106302,
+      "ocr_seconds": 0.483012139913626,
+      "detections": 10
+    },
+    {
+      "path": "runs/spark-gpu-validation-001/50001/run/audit.json",
+      "sha256": "99a2adfa5f10f19ab6d65dff577d822df2a67d0ff636e74dab8bd12a45236ac6",
+      "status": "completed_unassessed",
+      "seconds": 0.732225708081387,
+      "ocr_seconds": 0.44512114801909775,
+      "detections": 12
+    },
+    {
+      "path": "runs/spark-gpu-validation-001/50002/run/audit.json",
+      "sha256": "d504606eb93885ed8d55f47390ad36eac12732239ae7ec97bd1ed0fc5c29753f",
+      "status": "completed_unassessed",
+      "seconds": 0.5754451280226931,
+      "ocr_seconds": 0.42089592502452433,
+      "detections": 4
+    },
+    {
+      "path": "runs/spark-gpu-validation-001/50003/run/audit.json",
+      "sha256": "936853c583eda459ba7382cd7e0e575e26ff94fc328a3779d78aeb681ff6a33e",
+      "status": "completed_unassessed",
+      "seconds": 0.3908808489795774,
+      "ocr_seconds": 0.2415143100079149,
+      "detections": 3
+    },
+    {
+      "path": "runs/spark-gpu-validation-001/50004/run/audit.json",
+      "sha256": "e5918b84ec1520934bb7edac7d625aee3fda5cb968210821444e7b4d1b5cb6ab",
+      "status": "completed_unassessed",
+      "seconds": 0.5277291350066662,
+      "ocr_seconds": 0.34852033690549433,
+      "detections": 8
+    },
+    {
+      "path": "runs/spark-gpu-validation-001/50005/run/audit.json",
+      "sha256": "e81eea88d643ef3c064d862042062194823063c9ace4690d39b1567114cfd856",
+      "status": "completed_unassessed",
+      "seconds": 0.5874142600223422,
+      "ocr_seconds": 0.4466863450361416,
+      "detections": 6
+    },
+    {
+      "path": "runs/spark-gpu-validation-001/50006/run/audit.json",
+      "sha256": "0894c496ed4211203e1e8b4f062a01998958ddd1de950b38bb14556cfb64b646",
+      "status": "completed_unassessed",
+      "seconds": 0.7271924710366875,
+      "ocr_seconds": 0.5778735630447045,
+      "detections": 16
+    },
+    {
+      "path": "runs/spark-gpu-validation-001/50007/run/audit.json",
+      "sha256": "60ec1aeb80eaf8d91a570dae8f83a272f7dd0f71da1c2533105a032b4a481922",
+      "status": "completed_unassessed",
+      "seconds": 0.7346959519200027,
+      "ocr_seconds": 0.5885829080361873,
+      "detections": 9
+    },
+    {
+      "path": "runs/spark-gpu-validation-001/50008/run/audit.json",
+      "sha256": "b8a89b18ddaaecd6990d3a9885a1e0c662bb0f9b07647bd94d95dc4769b8a228",
+      "status": "completed_unassessed",
+      "seconds": 0.7084817689610645,
+      "ocr_seconds": 0.5456936720293015,
+      "detections": 7
+    },
+    {
+      "path": "runs/spark-gpu-validation-001/50009/run/audit.json",
+      "sha256": "9cfd7a13149f08fa09cad7323397e1ca02379a1234a1dab7ef4ec879d864c44a",
+      "status": "completed_unassessed",
+      "seconds": 0.7266226920764893,
+      "ocr_seconds": 0.575963038019836,
+      "detections": 10
+    },
+    {
+      "path": "runs/spark-gpu-validation-001/50010/run/audit.json",
+      "sha256": "ea9eacd0ea3873c822938f169605de08cb052d78c4c3b0e897d33795438426f5",
+      "status": "completed_unassessed",
+      "seconds": 0.6891542959492654,
+      "ocr_seconds": 0.5186499790288508,
+      "detections": 11
+    }
+  ],
+  "total_image_seconds": 7.5578116569668055,
+  "total_ocr_seconds": 5.192513365065679,
+  "scope": "synthetic, source-overlapping development data; not production approval"
+}

@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>墨隐 MoVeil · 本地审查</title><link rel="stylesheet" href="/style.css"><script src="/app.js" defer></script></head>
+<body><header><span class="brand">◈ 墨隐 MoVeil</span><span>NVIDIA GLiNER-PII</span></header>
+<main><h1>墨隐 MoVeil</h1><p class="subtitle">基于 NVIDIA GLiNER-PII 的图像隐私识别与辅助脱敏</p>
+<section class="runner"><div class="input-modes"><section><h2>样例图片测试</h2><div class="run-controls"><label for="count">样例图片测试数量</label><select id="count"></select><button id="start" class="primary">开始样例测试</button></div><p class="hint">带标注样例库 · 10 张图片</p></section><section><h2>自定义图片</h2><label class="file-picker" for="upload-file">选择图片<input id="upload-file" type="file" accept="image/png,image/jpeg,image/webp"></label><p id="file-name" class="hint">PNG / JPEG / WebP · 最大 10 MB · 1600 万像素</p><button id="upload" class="primary" disabled>上传并识别</button><p id="upload-status" role="status"></p></section></div><p id="progress-text" role="status">选择数量后开始运行</p><progress id="progress" value="0" max="10"></progress></section>
+<section id="scores" class="scores" aria-label="评测指标"></section>
+<p id="metrics" role="status"></p>
+<section class="toolbar"><label><input id="boxes" type="checkbox" checked> 显示框</label><label><input id="labels" type="checkbox" checked> 显示标签</label><button id="undo">撤销待保存框</button><button id="save" class="primary" disabled>保存补遮挡新版本</button><a id="download" href="/download" download="redacted.png" hidden>下载处理图</a></section>
+<p id="status" role="status">可在任一图片上拖动，补充遮挡。</p>
+<nav class="pager" aria-label="样例分页"><button id="previous" aria-label="上一张">←</button><div id="pages" role="tablist"></div><button id="next" aria-label="下一张">→</button></nav><p id="sample-info"></p><p id="empty">开始运行后，结果将在这里逐张出现。</p><section id="sample" hidden><div class="grid"><article><h2>01 / 原图</h2><canvas id="original" aria-label="原图：拖动绘制补遮挡矩形"></canvas></article><article><h2>02 / 处理图</h2><canvas id="result" aria-label="处理图：拖动绘制补遮挡矩形"></canvas></article></div>
+<p class="hint">拖动绘制补充遮挡框 · 紫色为待保存框 · 保存后生成新版本</p>
+<section id="match-section"><h2>实体匹配明细</h2><div id="matches" class="matches"></div></section><section class="detection-section"><h2>检测详情</h2><div id="detections" class="matches"></div></section><p id="version"></p></section></main></body></html>

@@ -1,0 +1,27 @@
+{
+  "dataset": "nvidia/Nemotron-PII",
+  "revision": "b70ffaf5ff39e079776134c5bf4381f00a9fd1ed",
+  "served_revision": "b70ffaf5ff39e079776134c5bf4381f00a9fd1ed",
+  "url": "https://datasets-server.huggingface.co/rows?dataset=nvidia%2FNemotron-PII&config=default&split=train&offset=50000&length=1",
+  "split": "train",
+  "row_idx": 50000,
+  "uid": "058211ab4d324e3a9e5b83c557a341d6",
+  "locale": "intl",
+  "labels": [
+    "date_of_birth",
+    "employment_status",
+    "first_name",
+    "language",
+    "last_name",
+    "occupation"
+  ],
+  "record_sha256": "f3f3b1c0b7e3f070e8561ffb57a685c84f808ef9a8f48ccdb1ac0e069a4d8885",
+  "input_sha256": "7d67e2f94933e52de396d972407266a3b3381def2929ed3301eef9dcc8a63dd1",
+  "license": "CC-BY-4.0",
+  "license_url": "https://creativecommons.org/licenses/by/4.0/",
+  "authors": "Amy Steier, Andre Manoel, Alexa Haushalter, Maarten Van Segbroeck; NVIDIA (2025)",
+  "modifications": "Text rendered into PNG; independent character/pixel annotations added. Agent output redacted.",
+  "size_discrepancy": "Card: 100000 total, 50000 per split; viewer: 200000 total; rows API: 100000 train. Not resolved.",
+  "font": "C:\\Windows\\Fonts\\consola.ttf",
+  "font_sha256": "cf00b507b3286870cc5064ebd0633c303f70b491a4af25eec2d32df413db0179"
+}

@@ -1,0 +1,62 @@
+[
+  {
+    "offset": 50001,
+    "uid": "564aaab4a96a4afba303c9d702ce435e",
+    "annotation_repairs": [],
+    "input_sha256": "25e67ca3de36dc90939b10f53a4750d0acea4151addaa17ca76911745829fe57"
+  },
+  {
+    "offset": 50002,
+    "uid": "1f1e650b4c7f42cd822cc53d4a1a3399",
+    "annotation_repairs": [],
+    "input_sha256": "99572051b97401f45468ed6c9393d46275a37bfcf1647f8269fef94af6afb3e8"
+  },
+  {
+    "offset": 50003,
+    "uid": "7167c6f50a2c4bd6b349163980c79c71",
+    "annotation_repairs": [],
+    "input_sha256": "937d3335403920f8515b39ae8fa227847daef26b05526d19823de1d8c90ebb80"
+  },
+  {
+    "offset": 50004,
+    "uid": "f6eefc3133614611a421681c3d9df1b5",
+    "annotation_repairs": [],
+    "input_sha256": "83aa12a8b635086b7035327a33867c7cddaec6d0a2d12d881126864a5b8b90ab"
+  },
+  {
+    "offset": 50005,
+    "uid": "e7496a06d3594231a0cedca37877a7c6",
+    "annotation_repairs": [],
+    "input_sha256": "f4b818a788f5f4c553bb57c920f99cdc3f5c4c2f152d6deaa4f9dceddfd5af43"
+  },
+  {
+    "offset": 50006,
+    "uid": "8dba243e065f4f12800be2541ffbc170",
+    "annotation_repairs": [],
+    "input_sha256": "c58923e2fb07538338fbfc9fa0488e75ba2744dbaac54be94bba5332cfde588e"
+  },
+  {
+    "offset": 50007,
+    "uid": "d3510ec89ab94e5e9446922d2a637d67",
+    "annotation_repairs": [],
+    "input_sha256": "bda79a7b71f5f64e62a9b0f1f8fa6d09a551939fdec70288f445fee4c024328f"
+  },
+  {
+    "offset": 50008,
+    "uid": "4443c8e7f35e43aeb510cf44721f54ec",
+    "annotation_repairs": [],
+    "input_sha256": "07cd14e0549678fc4f02fe68ec03d81b3ea311d1ca5f210cfa5ba04dd1bb6ecf"
+  },
+  {
+    "offset": 50009,
+    "uid": "2d5cf7ec703249c28de36a081cf6f094",
+    "annotation_repairs": [],
+    "input_sha256": "9277ac2a9162e8ea7713352fa823c853b724bddeba64b36414deeed1be97239a"
+  },
+  {
+    "offset": 50010,
+    "uid": "aa68de98f33149b08b231a63a9dc0c6c",
+    "annotation_repairs": [],
+    "input_sha256": "8bfdd74af0239f28ffdfdcf8cf51c9420a281ad8564631ea14549ec29ecdded7"
+  }
+]

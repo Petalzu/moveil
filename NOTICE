@@ -1,0 +1,13 @@
+墨隐 MoVeil——基于 NVIDIA GLiNER-PII 的图像隐私识别与辅助脱敏
+Copyright 2026 墨隐 MoVeil contributors / 项目贡献者
+
+Original project source code is licensed under the Apache License,
+Version 2.0. See LICENSE.
+
+Third-party datasets, derived data, models, dependencies, fonts and other
+third-party materials remain subject to their own licenses. This project's
+Apache-2.0 license does not relicense those materials. See
+THIRD_PARTY_NOTICES.md for attribution and scope. Separately delivered
+videos retain their own accompanying media attribution documentation.
+
+本项目自有源码采用 Apache-2.0；第三方材料独立适用各自许可。
